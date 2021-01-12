@@ -4,42 +4,124 @@
 
 
             <div class="row ">
-                <div  class="col-md-6 ">
+                <div class="col-md-6 ">
                     <h2>Enter Delivery Details</h2>
                     <div>
                         <label>Address</label>
-                        <input class="form-control" type="text" id="Address" name="Adress">
+                        <input class="form-control" type="text" id="Address" name="Address">
                         <label>Pincode</label>
                         <input class="form-control" type="text" id="Pincode" name="Pincode">
                         <label>Mobile</label>
                         <input class="form-control" type="text" id="Mobile" name="Mobile">
-                    
+                        <input type="text" name="userId" id="" value="{{user._id}}" hidden>
+
                     </div>
                 </div>
 
-              
-               <div class="col-md-4" >
-                  <div class="container mt-5 ml-5  checkout">
 
-                       <h5>Total amount : Rs. {{total}}</h5>
-                       <hr>
-                      <div class="payment ">
-                          <p>Payment method</p>
-                           <label class="radio-inline">
-                            <input type="radio" name="payment-method" value="COD" checked>COD
-                          </label><br>
+                <div class="col-md-4">
+                    <div class="container mt-5 ml-5  checkout">
 
-                          <label class="radio-inline mt-2">
-                            <input type="radio" name="payment-method" value="ONLINE" checked>Online payment
-                          </label><br>
-                           <button type="submit" class="btn btn-primary float-right">Checkout</button>
-                          </form>
-                           
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        <h5>Total amount : Rs. {{total}}</h5>
+                        <hr>
+                        <div class="payment ">
+                            <p>Payment method</p>
+                            <label class="radio-inline">
+                                <input type="radio" name="payment-method" value="COD" checked>COD
+                            </label><br>
 
-       </form>
+                            <label class="radio-inline mt-2">
+                                <input type="radio" name="payment-method" value="ONLINE" checked>Online payment
+                            </label><br>
+                            <button type="submit" class="btn btn-primary float-right">Checkout</button>
+        </form>
+
+    </div>
+    </div>
+    </div>
+    </div>
+
+    </form>
     </div>
 </section>
+
+
+<script>
+    $("#checkout-form").submit((e) => {
+        e.preventDefault()
+        $.ajax({
+            url: '/place-order',
+            method: 'post',
+            data: $('#checkout-form').serialize(),
+            success: (response) => {
+                alert(response)
+                if (response.codSuccess) {
+                    location.href = '/order-success'
+                } else {
+                    razorpayPayment(response)
+
+                }
+            }
+        })
+    })
+    function razorpayPayment(order) {
+        var options = {
+            "key": "rzp_test_wrTrEBDdMaeekZ", // Enter the Key ID generated from the Dashboard
+            "amount": order.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "currency": "INR",
+            "name": "CROSSROADS",
+            "description": "Test Transaction",
+            "image": "https://example.com/your_logo",
+            "order_id": order.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+            "handler": function (response) {
+                alert(response.razorpay_payment_id);
+                alert(response.razorpay_order_id);
+                alert(response.razorpay_signature);
+                verifyPayment(response,order)
+
+                
+            },
+            "prefill": {
+                "name": "Gaurav Kumar",
+                "email": "gaurav.kumar@example.com",
+                "contact": "9999999999"
+            },
+            "notes": {
+                "address": "Razorpay Corporate Office"
+            },
+            "theme": {
+                "color": "#3399cc"
+            }
+        };
+        var rzp1 = new Razorpay(options);
+         rzp1.open();
+    }
+    function verifyPayment(payment,order){
+                    $.ajax({
+                        url:'/verify-payment',
+                        data:{
+                            payment,
+                            order
+                        },
+                        method:'post'
+                    })
+                }
+</script>
+<style>
+    input[type=radio] {
+        width: 20px;
+        height: 20px;
+    }
+
+    label.radio-inline {
+        display: flex;
+        align-items: center;
+
+    }
+
+    .checkout {
+        border: 1px solid;
+        border-radius: 3px;
+        padding: 30px;
+    }
+</style>

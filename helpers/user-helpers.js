@@ -4,6 +4,11 @@ var collection=require('../config/collections')
  var objectId=require('mongodb').ObjectID
 const { ObjectId } = require('mongodb')
 const { response } = require('express')
+const Razorpay=require('razorpay')
+var instance = new Razorpay({
+    key_id: 'rzp_test_wrTrEBDdMaeekZ',
+    key_secret: 'AeVQDb55UMnMFLAYC7szGGql',
+  });
  module.exports={
     doSignup:(userData)=>{
         return new Promise(async(resolve,reject)=>{
@@ -161,7 +166,7 @@ const { response } = require('express')
                     }
                     ).then((response)=>{
                 
-                        resolve(true)
+                        resolve({status:true})
                     })
                 }
             
@@ -231,6 +236,109 @@ const { response } = require('express')
         resolve(total[0].total)
         })
 
+    },
+    placeOrder:(order,products,total)=>{
+        return new Promise((resolve,reject)=>{
+            console.log(order,products,total);
+            let status=order['payment-method']=='COD'?'placed':'pending'
+            let orderObj={
+                deliveryDetails:{
+                    mobile:order.Mobile,
+                    address:order.Address,
+                    pincode:order.Pincode
+
+                },
+                userId:objectId(order.userId),
+                PaymentMethode:order['payment-method'],
+                products:products,
+                totalAmount:total,
+                status:status,
+                date:new Date()
+                
+            }
+            db.get().collection(collection.ORDER_COLLECTION).insertOne(orderObj).then((response)=>{
+                db.get().collection(collection.CART_COLLECTION).removeOne({user:objectId(order.userId)})
+                resolve(response.ops[0]._id)
+
+            })
+
+        })
+
+    },
+    getCartProductList:(userId)=>{
+        return new Promise(async(resolve,reject)=>{
+            let cart =await db.get().collection(collection.CART_COLLECTION).findOne({user:objectId(userId)})
+            resolve(cart.products)
+        })
+    },
+    getUserOrders:(userId)=>{
+        return new Promise(async(resolve,reject)=>{
+            console.log(userId);
+            let orders=await db.get().collection(collection.ORDER_COLLECTION)
+            .find({userId:objectId(userId)}).toArray()
+            console.log(orders);
+            resolve(orders)
+        })
+    },
+    getOrderProducts:(orderId)=>{
+        return new Promise(async(resolve,reject)=>{
+            let orderItems=await db.get().collection(collection.ORDER_COLLECTION).aggregate([
+                {
+                $match:{_id:objectId(orderId)}
+            },
+            {
+                $unwind:'$products'
+            },
+            {
+               $project:{
+                   item:"$products.item",
+                   quantity:'$products.quantity'
+               } 
+            },
+            {
+                $lookup:{
+                    from:collection.PRODUCT_COLLECTION,
+                    localField:'item',
+                    foreignField:'_id',
+                    
+                    as:'product'
+                },
+            },
+                
+            {
+                    $project:{
+                        item:1,quantity:1,product:{$arrayElemAt:['$product',0]}
+
+                    }
+            }
+
+            
+         
+        ]).toArray()
+        console.log(orderItems);
+        resolve(orderItems)
+        })
+    },
+    generateRazorpay:(orderId,total)=>{
+        return new Promise((resolve,reject)=>{
+            var options = {
+                amount: total,  // amount in the smallest currency unit
+                currency: "INR",
+                receipt: "order"+orderId
+              };
+              instance.orders.create(options, function(err, order) {
+                  if (err){
+                      console.log(err);
+                  }else{
+                console.log("",order);
+                resolve(order)
+                  }
+              });
+            
+        })
     }
+
+
+    
 
 }

@@ -25,9 +25,9 @@
           {{!/each--}}
           <td>
             
-            <button class="cart-item-count mr-3" onclick="changeQuantity('{{this._id}}','{{this.product._id}}','{{user._id}}',-1)">-</button>
+            <button class="cart-item-count mr-3" onclick="changeQuantity('{{this._id}}','{{this.product._id}}','{{../user._id}}',-1)">-</button>
             <span id="{{this.product._id}}">{{this.quantity}}</span>
-            <button class="cart-item-count ml-3" onclick="changeQuantity('{{this._id}}','{{this.product._id}}','{{user._id}}',1)">+</button>
+            <button class="cart-item-count ml-3" onclick="changeQuantity('{{this._id}}','{{this.product._id}}','{{../user._id}}',1)">+</button>
           </td>
           <td>
              <a href="/product-remove/{{this.product._id}}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete {{this.product.Name}} ? ')">Remove</a>
@@ -68,7 +68,7 @@
           location.reload()
         }else{
           document.getElementById(proId).innerHTML=quantity+count
-          document.getElementById(total).innerHTML=response.total
+          document.getElementById('total').innerHTML=response.total
         }
         
       }
