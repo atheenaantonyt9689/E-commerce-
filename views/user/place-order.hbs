@@ -90,7 +90,7 @@
                 "address": "Razorpay Corporate Office"
             },
             "theme": {
-                "color": "#3399cc"
+                "color": "red"
             }
         };
         var rzp1 = new Razorpay(options);
@@ -103,7 +103,16 @@
                             payment,
                             order
                         },
-                        method:'post'
+                        method:'post',
+                        success:(response)=>{
+                            if(response.status){
+                                 location.href = '/order-success
+                                
+                            }else{
+                                alert("paymentfailed")
+                            }
+
+                        }
                     })
                 }
 </script>

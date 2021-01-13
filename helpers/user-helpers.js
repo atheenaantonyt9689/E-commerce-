@@ -336,7 +336,35 @@ var instance = new Razorpay({
               });
             
         })
+    },
+    verifyPayment:(details)=>{
+        return new Promise((resolve,reject)=>{
+            const crypto = require('crypto');
+            const hmac = crypto.createHmac('sha256', 'AeVQDb55UMnMFLAYC7szGGql');
+            hmac.update(details['payment[razorpay_order_id]']+'|'+details['payment[razorpay_payment_id]'])
+            let=hmac.digest('hex')
+            if(hmac==details['payment[razorpay_signature]']){
+                resolve()
+            }else{
+                reject()
+            
+            }        })
+    },
+    changePaymentStatus:(orderId)=>{
+        console.log(orderId);
+        return new Promise((resolve,reject)=>{
+            db.get().collection(collection.ORDER_COLLECTION).updateOne({_id:objectId(orderId)},
+            {
+                $set:{
+                    status:'placed'
+                }
+                
+            }).then(()=>{
+                resolve()
+            })
+        })
     }
+    
 
 
     
