@@ -4,7 +4,7 @@ var router = express.Router();
 const productHelpers=require('../helpers/product-helpers');
 const userHelpers=require('../helpers/user-helpers')
 const verifyLogin=(req,res,next)=>{
-  if(req.session.user.loggedIn){
+  if(req.session.user.userLoggedIn){
     next()
 
   }else{
@@ -66,6 +66,8 @@ router.post('/login',(req,res)=>{
 })
 router.get('/logout',(req,res)=>{
   req.session.user=null
+  req.session.userLoggedIn=false
+
   res.redirect('/')
 })
 router.get('/cart',verifyLogin,async(req,res)=>{
