@@ -232,15 +232,19 @@ var instance = new Razorpay({
             
          
         ]).toArray()
-        console.log(total[0].total)
-        resolve(total[0].total)
+        console.log(total.length)
+        if (total.length) {
+            resolve(total[0].total) //totalprice
+        } else {
+            resolve()
+        }
         })
 
     },
     placeOrder:(order,products,total)=>{
         return new Promise((resolve,reject)=>{
             console.log(order,products,total);
-            let status=order['payment-method']=='COD'?'placed':'pending'
+            let status=order['payment-method']==='COD'?'placed':'pending'
             let orderObj={
                 deliveryDetails:{
                     mobile:order.Mobile,
@@ -322,9 +326,9 @@ var instance = new Razorpay({
     generateRazorpay:(orderId,total)=>{
         return new Promise((resolve,reject)=>{
             var options = {
-                amount: total,  // amount in the smallest currency unit
+                amount: total*100,  // amount in the smallest currency unit
                 currency: "INR",
-                receipt: "order"+orderId
+                receipt: ""+orderId
               };
               instance.orders.create(options, function(err, order) {
                   if (err){
@@ -338,12 +342,14 @@ var instance = new Razorpay({
         })
     },
     verifyPayment:(details)=>{
+        console.log("verifypayment inside----------------------------------------------------");
         return new Promise((resolve,reject)=>{
             const crypto = require('crypto');
-            const hmac = crypto.createHmac('sha256', 'AeVQDb55UMnMFLAYC7szGGql');
+            let hmac = crypto.createHmac('sha256', 'AeVQDb55UMnMFLAYC7szGGql');
             hmac.update(details['payment[razorpay_order_id]']+'|'+details['payment[razorpay_payment_id]'])
-            let=hmac.digest('hex')
+            hmac=hmac.digest('hex')
             if(hmac==details['payment[razorpay_signature]']){
+                console.log("verifypayment suceess----------------------------------------------------");
                 resolve()
             }else{
                 reject()
@@ -351,7 +357,7 @@ var instance = new Razorpay({
             }        })
     },
     changePaymentStatus:(orderId)=>{
-        console.log(orderId);
+        console.log(orderId,"pYMENTTTT----------------------------------------------------------------------------------");
         return new Promise((resolve,reject)=>{
             db.get().collection(collection.ORDER_COLLECTION).updateOne({_id:objectId(orderId)},
             {
